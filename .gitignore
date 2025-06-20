@@ -1,0 +1,57 @@
+# Ansible artifacts
+*.retry
+*.log
+*.tar.gz
+*.gz
+*.zip
+
+# Arquivo de variáveis sensíveis
+secret.yml
+secret.yaml
+*.vault.yml
+
+# Arquivos temporários de roles
+roles/*/tmp/
+roles/*/*.pyc
+
+# Arquivos locais de execução
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Vagrant artifacts
+.vagrant/
+.vagrant-libvirt/
+*.box
+
+# Libvirt artifacts
+*.qcow2
+*.img
+
+# Arquivos de SSH temporários
+*.pem
+*.key
+*.pub
+
+# Backup de editores
+*~
+.*.sw?
+*.orig
+
+# Diretórios e arquivos de IDEs
+.idea/
+.vscode/
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Logs
+logs/
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
