@@ -1,0 +1,16 @@
+---
+- name: Instalar TimescaleDB
+  apt:
+    name:
+      - timescaledb-2-postgresql-16
+      - timescaledb-2-loader-postgresql-16
+    state: present
+
+- name: Executar tuning TimescaleDB
+  command: timescaledb-tune --quiet --yes
+  notify: Restart PostgreSQL
+
+- name: Reiniciar PostgreSQL para aplicar mudanças
+  systemd:
+    name: postgresql
+    state: restarted

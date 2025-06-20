@@ -1,0 +1,57 @@
+---
+- name: Criar usuário do Zabbix
+  become_user: postgres
+  postgresql_user:
+    name: "{{ zabbix_db_user }}"
+    password: "{{ zabbix_db_password }}"
+    encrypted: yes
+    role_attr_flags: CREATEDB
+
+- name: Criar banco Zabbix
+  become_user: postgres
+  postgresql_db:
+    name: "{{ zabbix_db_name }}"
+    owner: "{{ zabbix_db_user }}"
+    encoding: UTF8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+    template: template0
+
+- name: Ativar extensão TimescaleDB no banco Zabbix
+  become_user: postgres
+  postgresql_ext:
+    name: timescaledb
+    db: "{{ zabbix_db_name }}"
+    state: present
+
+- name: Ajustar pg_hba.conf
+  lineinfile:
+    dest: "/etc/postgresql/16/main/pg_hba.conf"
+    line: "host    {{ zabbix_db_name }}   {{ zabbix_db_user }}   0.0.0.0/0   md5"
+    state: present
+
+- name: Ajustar postgresql.conf
+  lineinfile:
+    dest: "/etc/postgresql/16/main/postgresql.conf"
+    regexp: '^#?listen_addresses'
+    line: "listen_addresses = '*'"
+
+- name: Reiniciar PostgreSQL
+  systemd:
+    name: postgresql
+    state: restarted
+
+- name: Carregar schema do Zabbix
+  become_user: postgres
+  shell: |
+    zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql {{ zabbix_db_name }}
+    zcat /usr/share/zabbix-sql-scripts/postgresql/images.sql.gz | psql {{ zabbix_db_name }}
+    zcat /usr/share/zabbix-sql-scripts/postgresql/data.sql.gz | psql {{ zabbix_db_name }}
+  args:
+    warn: false
+
+- name: Carregar schema específico do TimescaleDB
+  become_user: postgres
+  shell: "psql -d {{ zabbix_db_name }} -f /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql"
+  args:
+    warn: false

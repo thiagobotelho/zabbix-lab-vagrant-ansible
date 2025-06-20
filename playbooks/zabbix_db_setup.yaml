@@ -1,0 +1,11 @@
+---
+- name: Setup PostgreSQL com TimescaleDB e banco Zabbix
+  hosts: zabbix_db
+  become: yes
+  vars_files:
+    - "../secret.yml"
+
+  roles:
+    - role: postgresql
+    - role: timescaledb
+    - role: zabbix_db
