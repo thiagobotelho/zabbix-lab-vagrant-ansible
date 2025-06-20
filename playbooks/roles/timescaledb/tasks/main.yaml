@@ -22,9 +22,3 @@
 - name: Executar tuning do TimescaleDB
   ansible.builtin.command: timescaledb-tune --quiet --yes
   notify: Restart PostgreSQL
-
-- name: Reiniciar PostgreSQL para aplicar mudanças
-  ansible.builtin.systemd:
-    name: postgresql
-    state: restarted
-    enabled: yes
