@@ -1,16 +1,30 @@
 ---
-- name: Instalar TimescaleDB
-  apt:
+- name: Adicionar chave GPG do repositório TimescaleDB
+  ansible.builtin.apt_key:
+    url: https://packagecloud.io/timescale/timescaledb/gpgkey
+    state: present
+
+- name: Adicionar repositório TimescaleDB para Ubuntu
+  ansible.builtin.apt_repository:
+    repo: "deb https://packagecloud.io/timescale/timescaledb/ubuntu/ {{ ansible_distribution_release | lower }} main"
+    filename: timescaledb
+    state: present
+    update_cache: yes
+
+- name: Instalar TimescaleDB para PostgreSQL 16
+  ansible.builtin.apt:
     name:
       - timescaledb-2-postgresql-16
       - timescaledb-2-loader-postgresql-16
     state: present
+    update_cache: yes
 
-- name: Executar tuning TimescaleDB
-  command: timescaledb-tune --quiet --yes
+- name: Executar tuning do TimescaleDB
+  ansible.builtin.command: timescaledb-tune --quiet --yes
   notify: Restart PostgreSQL
 
 - name: Reiniciar PostgreSQL para aplicar mudanças
-  systemd:
+  ansible.builtin.systemd:
     name: postgresql
     state: restarted
+    enabled: yes
