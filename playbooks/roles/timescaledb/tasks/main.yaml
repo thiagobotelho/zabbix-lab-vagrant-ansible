@@ -21,4 +21,14 @@
 
 - name: Executar tuning do TimescaleDB
   ansible.builtin.command: timescaledb-tune --quiet --yes
+
+- name: Configurar preload da extensão TimescaleDB
+  lineinfile:
+    path: /etc/postgresql/16/main/postgresql.conf
+    regexp: '^#?shared_preload_libraries\s*='
+    line: "shared_preload_libraries = 'timescaledb'"
+    state: present
   notify: Restart PostgreSQL
+
+- name: Reiniciar PostgreSQL imediatamente após configurar preload
+  meta: flush_handlers

@@ -29,6 +29,21 @@
     state: present
     update_cache: yes
 
+- name: Permitir acesso ao banco Zabbix via md5
+  lineinfile:
+    path: /etc/postgresql/16/main/pg_hba.conf
+    insertafter: EOF
+    line: "host    {{ zabbix_db_name }}    {{ zabbix_db_user }}    0.0.0.0/0    md5"
+    state: present
+
+- name: Configurar postgresql.conf para aceitar conexões externas
+  lineinfile:
+    path: /etc/postgresql/16/main/postgresql.conf
+    regexp: '^#?listen_addresses\s*='
+    line: "listen_addresses = '*'"
+    state: present
+  notify: Restart PostgreSQL
+
 - name: Adicionar repositório Zabbix e instalar pacote zabbix-sql-scripts
   block:
     - name: Baixar pacote do repositório Zabbix

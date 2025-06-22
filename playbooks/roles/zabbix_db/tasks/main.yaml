@@ -1,80 +1,29 @@
 ---
 - name: Criar usuário do Zabbix
-  community.postgresql.postgresql_user:
-    name: "{{ zabbix_db_user }}"
-    password: "{{ zabbix_db_password }}"
-    encrypted: true
-    role_attr_flags: CREATEDB
-    login_user: postgres
-    login_unix_socket: /var/run/postgresql
+  shell: |
+    sudo -u postgres psql -c "DO \$\$ BEGIN
+      IF NOT EXISTS (
+        SELECT FROM pg_catalog.pg_roles WHERE rolname = '{{ zabbix_db_user }}'
+      ) THEN
+        CREATE ROLE {{ zabbix_db_user }} WITH LOGIN PASSWORD '{{ zabbix_db_password }}' CREATEDB;
+      END IF;
+    END \$\$;"
 
 - name: Criar banco de dados Zabbix
-  become: true
-  community.postgresql.postgresql_db:
-    name: "{{ zabbix_db_name }}"
-    owner: "{{ zabbix_db_user }}"
-    encoding: UTF8
-    lc_collate: en_US.UTF-8
-    lc_ctype: en_US.UTF-8
-    template: template0
-
-- name: Ativar extensão TimescaleDB
-  become: true
-  community.postgresql.postgresql_ext:
-    name: timescaledb
-    db: "{{ zabbix_db_name }}"
-    state: present
-
-- name: Permitir acesso ao banco Zabbix via md5
-  become: true
-  community.postgresql.postgresql_pg_hba:
-    dest: /etc/postgresql/16/main/pg_hba.conf
-    contype: host
-    users: "{{ zabbix_db_user }}"
-    source: 0.0.0.0/0
-    databases: "{{ zabbix_db_name }}"
-    method: md5
-
-- name: Configurar postgresql.conf para aceitar conexões externas
-  become: true
-  community.postgresql.postgresql_set:
-    name: listen_addresses
-    value: "'*'"
-    setting: postgresql.conf
-    state: present
-    reload: yes
-    login_user: postgres
-    login_unix_socket: /var/run/postgresql
-  notify: Restart PostgreSQL
+  shell: |
+    sudo -u postgres psql -c "CREATE DATABASE {{ zabbix_db_name }}
+      WITH OWNER = '{{ zabbix_db_user }}'
+      ENCODING = 'UTF8'
+      LC_COLLATE = 'en_US.UTF-8'
+      LC_CTYPE = 'en_US.UTF-8'
+      TEMPLATE = template0;"
 
 - name: Carregar schema do Zabbix - server.sql.gz
-  become: true
-  community.postgresql.postgresql_script:
-    db: "{{ zabbix_db_name }}"
-    path: "/usr/share/zabbix-sql-scripts/postgresql/server.sql.gz"
-    login_user: postgres
-    login_unix_socket: /var/run/postgresql
-
-- name: Carregar schema do Zabbix - images.sql.gz
-  become: true
-  community.postgresql.postgresql_script:
-    db: "{{ zabbix_db_name }}"
-    path: "/usr/share/zabbix-sql-scripts/postgresql/images.sql.gz"
-    login_user: postgres
-    login_unix_socket: /var/run/postgresql
-
-- name: Carregar schema do Zabbix - data.sql.gz
-  become: true
-  community.postgresql.postgresql_script:
-    db: "{{ zabbix_db_name }}"
-    path: "/usr/share/zabbix-sql-scripts/postgresql/data.sql.gz"
-    login_user: postgres
-    login_unix_socket: /var/run/postgresql
+  shell: "zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u postgres psql {{ zabbix_db_name }}"
 
 - name: Carregar schema específico do TimescaleDB
-  become: true
-  community.postgresql.postgresql_script:
-    db: "{{ zabbix_db_name }}"
-    path: "/usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql"
-    login_user: postgres
-    login_unix_socket: /var/run/postgresql
+  shell: "sudo -u postgres psql {{ zabbix_db_name }} -f /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql"
+
+- name: Ativar extensão TimescaleDB
+  shell: sudo -u postgres psql -d {{ zabbix_db_name }} -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
+  notify: Restart PostgreSQL
