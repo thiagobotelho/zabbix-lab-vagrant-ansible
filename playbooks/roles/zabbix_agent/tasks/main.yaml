@@ -39,3 +39,9 @@
     - { key: 'ServerActive', value: '{{ zabbix_server_ip }},{{ zabbix_proxy_ip }}' }
     - { key: 'Hostname',     value: '{{ inventory_hostname }}' }
   notify: Restarted Zabbix Agent2
+
+- name: Habilitar e iniciar o serviço do Zabbix Agent 2
+  service:
+    name: zabbix-agent2
+    state: started
+    enabled: yes

@@ -1,0 +1,60 @@
+---
+- name: Verificar se o pacote zabbix-release está instalado
+  command: dpkg-query -W -f='${Status}' zabbix-release
+  register: zabbix_release_status
+  changed_when: false
+  failed_when: zabbix_release_status.rc not in [0, 1]
+
+- name: Adicionar repositório Zabbix
+  block:
+    - name: Baixar pacote do repositório Zabbix
+      get_url:
+        url: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu22.04_all.deb
+        dest: /tmp/zabbix-release.deb
+        mode: '0644'
+
+    - name: Instalar repositório Zabbix
+      apt:
+        deb: /tmp/zabbix-release.deb
+        state: present
+
+    - name: Atualizar cache do APT
+      apt:
+        update_cache: yes
+  when: "'install ok installed' not in zabbix_release_status.stdout"
+
+- name: Instalar Zabbix Server com suporte a PostgreSQL
+  apt:
+    name: zabbix-server-pgsql
+    state: present
+
+- name: Configurar DBHost no zabbix_server.conf
+  lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#?\s*DBHost='
+    line: "DBHost={{ zabbix_db_host }}"
+    create: yes
+    backup: yes
+
+- name: Configurar DBUser no zabbix_server.conf
+  lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#?\s*DBUser='
+    line: "DBUser={{ zabbix_db_user }}"
+    create: yes
+    backup: yes
+
+- name: Configurar DBPassword no zabbix_server.conf
+  lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#?\s*DBPassword='
+    line: "DBPassword={{ zabbix_db_password }}"
+    create: yes
+    backup: yes
+  notify: Restart Zabbix Server
+
+- name: Habilitar e iniciar o serviço do Zabbix Server
+  service:
+    name: zabbix-server
+    state: started
+    enabled: yes

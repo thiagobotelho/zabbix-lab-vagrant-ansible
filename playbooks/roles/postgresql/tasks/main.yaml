@@ -44,6 +44,12 @@
     state: present
   notify: Restart PostgreSQL
 
+- name: Habilitar e iniciar o serviço do PostgreSQL
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
 - name: Adicionar repositório Zabbix e instalar pacote zabbix-sql-scripts e zabbix-agent2-plugin-postgresql
   block:
     - name: Baixar pacote do repositório Zabbix
