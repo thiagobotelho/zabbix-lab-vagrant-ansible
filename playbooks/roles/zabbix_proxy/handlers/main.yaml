@@ -1,0 +1,4 @@
+- name: Restart Zabbix Proxy
+  service:
+    name: zabbix-proxy
+    state: restarted

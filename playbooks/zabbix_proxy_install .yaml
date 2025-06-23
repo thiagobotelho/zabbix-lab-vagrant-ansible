@@ -1,0 +1,8 @@
+---
+- name: Instala e configura o Zabbix Proxy
+  hosts: zabbix_proxy
+  become: yes
+  vars_files:
+    - "../secret.yml"
+  roles:
+    - role: zabbix_proxy

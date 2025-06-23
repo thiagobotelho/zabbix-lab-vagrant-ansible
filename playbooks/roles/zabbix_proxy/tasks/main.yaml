@@ -23,40 +23,39 @@
         update_cache: yes
   when: "'install ok installed' not in zabbix_release_status.stdout"
 
-- name: Instalar Zabbix Server com suporte a PostgreSQL e Agent
+- name: Instalar Zabbix Proxy com suporte a SQLite3
   apt:
-    name: 
-      - zabbix-server-pgsql
-      - zabbix-agent
+    name: zabbix-proxy-sqlite3
     state: present
+    update_cache: yes
 
-- name: Configurar DBHost no zabbix_server.conf
+- name: Configurar Server no zabbix_proxy.conf
   lineinfile:
-    path: /etc/zabbix/zabbix_server.conf
-    regexp: '^#?\s*DBHost='
-    line: "DBHost={{ zabbix_db_host }}"
+    path: /etc/zabbix/zabbix_proxy.conf
+    regexp: '^#?\s*Server='
+    line: "Server={{ zabbix_server }}"
     create: yes
     backup: yes
 
-- name: Configurar DBUser no zabbix_server.conf
+- name: Configurar Hostname no zabbix_proxy.conf
   lineinfile:
-    path: /etc/zabbix/zabbix_server.conf
-    regexp: '^#?\s*DBUser='
-    line: "DBUser={{ zabbix_db_user }}"
+    path: /etc/zabbix/zabbix_proxy.conf
+    regexp: '^#?\s*Hostname='
+    line: "Hostname={{ inventory_hostname }}"
     create: yes
     backup: yes
 
-- name: Configurar DBPassword no zabbix_server.conf
+- name: Configurar DBName para SQLite3 no zabbix_proxy.conf
   lineinfile:
-    path: /etc/zabbix/zabbix_server.conf
-    regexp: '^#?\s*DBPassword='
-    line: "DBPassword={{ zabbix_db_password }}"
+    path: /etc/zabbix/zabbix_proxy.conf
+    regexp: '^#?\s*DBName='
+    line: 'DBName=/var/lib/zabbix/zabbix_proxy.db'
     create: yes
     backup: yes
-  notify: Restart Zabbix Server
+  notify: Restart Zabbix Proxy
 
-- name: Habilitar e iniciar o serviço do Zabbix Server
+- name: Habilitar e iniciar o serviço do Zabbix Proxy
   service:
-    name: zabbix-server
+    name: zabbix-proxy
     state: started
     enabled: yes

@@ -42,6 +42,19 @@
     regexp: '^#?listen_addresses\s*='
     line: "listen_addresses = '*'"
     state: present
+
+- name: Tunar PostgreSQL
+  lineinfile:
+    path: /etc/postgresql/16/main/postgresql.conf
+    regexp: '^#?{{ item.param }}\s*='
+    line: "{{ item.param }} = {{ item.value }}"
+  with_items:
+    - { param: 'max_connections', value: '300' }
+    - { param: 'shared_buffers', value: '512MB' }
+    - { param: 'work_mem', value: '8MB' }
+    - { param: 'maintenance_work_mem', value: '128MB' }
+    - { param: 'checkpoint_completion_target', value: '0.9' }
+    - { param: 'wal_buffers', value: '16MB' }
   notify: Restart PostgreSQL
 
 - name: Habilitar e iniciar o serviço do PostgreSQL

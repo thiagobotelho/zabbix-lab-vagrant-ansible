@@ -1,9 +1,9 @@
 Vagrant.configure("2") do |config|
   nodes = [
     { name: "zabbix_db",       ip: "192.168.56.30", ram: 1024, cpus: 1, playbooks: ["zabbix_db_setup.yaml", "zabbix_agent_install.yaml"] },
-    { name: "zabbix_server",   ip: "192.168.56.60", ram: 1024, cpus: 1, playbooks: ["zabbix_server_install.yaml", "zabbix_agent_install.yaml"] },
-    { name: "zabbix_frontend", ip: "192.168.56.40", ram:  512, cpus: 1, playbooks: ["zabbix_frontend_install.yaml", "zabbix_agent_install.yaml"] },
+    { name: "zabbix_server",   ip: "192.168.56.60", ram: 1024, cpus: 1, playbooks: ["zabbix_server_install.yaml"] },
     { name: "zabbix_proxy",    ip: "192.168.56.50", ram:  512, cpus: 1, playbooks: ["zabbix_proxy_install.yaml", "zabbix_agent_install.yaml"] },
+    { name: "zabbix_frontend", ip: "192.168.56.40", ram:  512, cpus: 1, playbooks: ["zabbix_frontend_install.yaml", "zabbix_agent_install.yaml"] },
     { name: "grafana",         ip: "192.168.56.70", ram: 1024, cpus: 1, playbooks: ["grafana_install.yaml", "zabbix_agent_install.yaml"] }
   ]
 
