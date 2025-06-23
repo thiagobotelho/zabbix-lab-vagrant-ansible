@@ -1,0 +1,8 @@
+---
+- name: Instala e configura Grafana
+  hosts: grafana
+  become: yes
+  vars_files:
+    - "../secret.yml"
+  roles:
+    - role: grafana

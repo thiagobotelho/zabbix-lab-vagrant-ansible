@@ -1,0 +1,8 @@
+---
+- name: Instala e configura Zabbix Agent 2
+  hosts: all  # ou um grupo específico como zabbix_agents
+  become: yes
+  vars_files:
+    - "../secret.yml"
+  roles:
+    - role: zabbix_agent

@@ -18,6 +18,24 @@
       LC_CTYPE = 'en_US.UTF-8'
       TEMPLATE = template0;"
 
+- name: Criar usuário de monitoramento ({{ zabbix_monitor_user }})
+  shell: |
+    sudo -u postgres psql -c "DO \$\$ BEGIN
+      IF NOT EXISTS (
+        SELECT FROM pg_roles WHERE rolname = '{{ zabbix_monitor_user }}'
+      ) THEN
+        CREATE ROLE {{ zabbix_monitor_user }} WITH LOGIN PASSWORD '{{ zabbix_monitor_password }}';
+        GRANT pg_monitor TO {{ zabbix_monitor_user }};
+      END IF;
+    END \$\$;"
+
+- name: Permitir acesso ao PostgreSQL para {{ zabbix_monitor_user }}
+  lineinfile:
+    path: /etc/postgresql/16/main/pg_hba.conf
+    insertafter: EOF
+    line: "host    all    {{ zabbix_monitor_user }}    127.0.0.1/32    md5"
+    state: present
+
 - name: Carregar schema do Zabbix - server.sql.gz
   shell: "zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u postgres psql {{ zabbix_db_name }}"
 

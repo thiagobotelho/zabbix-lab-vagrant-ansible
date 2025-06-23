@@ -44,7 +44,7 @@
     state: present
   notify: Restart PostgreSQL
 
-- name: Adicionar repositório Zabbix e instalar pacote zabbix-sql-scripts
+- name: Adicionar repositório Zabbix e instalar pacote zabbix-sql-scripts e zabbix-agent2-plugin-postgresql
   block:
     - name: Baixar pacote do repositório Zabbix
       ansible.builtin.get_url:
@@ -64,4 +64,9 @@
     - name: Instalar zabbix-sql-scripts
       ansible.builtin.apt:
         name: zabbix-sql-scripts
+        state: present
+
+    - name: Instalar zabbix-agent2-plugin-postgresql
+      ansible.builtin.apt:
+        name: zabbix-agent2-plugin-postgresql
         state: present

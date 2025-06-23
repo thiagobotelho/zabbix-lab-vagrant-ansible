@@ -1,0 +1,41 @@
+- name: Verificar se o pacote zabbix-release está instalado
+  command: dpkg-query -W -f='${Status}' zabbix-release
+  register: zabbix_release_status
+  changed_when: false
+  failed_when: zabbix_release_status.rc not in [0, 1]  # rc 1 é "não instalado", tolerado
+
+- name: Adicionar repositório Zabbix
+  block:
+    - name: Baixar pacote do repositório Zabbix
+      get_url:
+        url: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu22.04_all.deb
+        dest: /tmp/zabbix-release.deb
+        mode: '0644'
+
+    - name: Instalar repositório Zabbix
+      apt:
+        deb: /tmp/zabbix-release.deb
+        state: present
+
+    - name: Atualizar cache do APT após adicionar repositório Zabbix
+      apt:
+        update_cache: yes
+  when: "'install ok installed' not in zabbix_release_status.stdout"
+
+- name: Instalar Zabbix Agent 2
+  apt:
+    name: zabbix-agent2
+    state: present
+    update_cache: yes
+
+- name: Configurar parâmetros no zabbix_agent2.conf
+  lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    create: yes
+  loop:
+    - { key: 'Server',       value: '{{ zabbix_server_ip }},{{ zabbix_proxy_ip }}' }
+    - { key: 'ServerActive', value: '{{ zabbix_server_ip }},{{ zabbix_proxy_ip }}' }
+    - { key: 'Hostname',     value: '{{ inventory_hostname }}' }
+  notify: Restarted Zabbix Agent2
