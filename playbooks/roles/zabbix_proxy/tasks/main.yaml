@@ -29,11 +29,19 @@
     state: present
     update_cache: yes
 
+- name: Garantir que o diretório /var/lib/zabbix exista com as permissões corretas
+  file:
+    path: /var/lib/zabbix
+    state: directory
+    owner: zabbix
+    group: zabbix
+    mode: '0755'
+
 - name: Configurar Server no zabbix_proxy.conf
   lineinfile:
     path: /etc/zabbix/zabbix_proxy.conf
     regexp: '^#?\s*Server='
-    line: "Server={{ zabbix_server }}"
+    line: "Server={{ zabbix_server_ip }}"
     create: yes
     backup: yes
 
