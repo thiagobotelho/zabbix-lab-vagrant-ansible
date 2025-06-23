@@ -1,34 +1,25 @@
-ENV['LIBVIRT_DEFAULT_URI'] = "qemu:///system"
-
 Vagrant.configure("2") do |config|
   nodes = [
-    { name: "zabbix_db",       ip: "192.168.121.30", ram: 1024, cpus: 1, playbooks: ["zabbix_db_setup.yaml", "zabbix_agent_install.yaml"] },
-    { name: "zabbix_server",   ip: "192.168.121.60", ram: 1024, cpus: 1, playbooks: ["zabbix_server_install.yaml", "zabbix_agent_install.yaml"] },
-    { name: "zabbix_agent",    ip: "192.168.121.20", ram: 512,  cpus: 1, playbooks: ["zabbix_agent_install.yaml"] },
-    { name: "zabbix_frontend", ip: "192.168.121.40", ram: 512,  cpus: 1, playbooks: ["zabbix_frontend_install.yaml", "zabbix_agent_install.yaml"] },
-    { name: "zabbix_proxy",    ip: "192.168.121.50", ram: 512,  cpus: 1, playbooks: ["zabbix_proxy_install.yaml", "zabbix_agent_install.yaml"] },
-    { name: "grafana",         ip: "192.168.121.70", ram: 1024, cpus: 1, playbooks: ["grafana_install.yaml", "zabbix_agent_install.yaml"] }
+    { name: "zabbix_db",       ip: "192.168.56.30", ram: 1024, cpus: 1, playbooks: ["zabbix_db_setup.yaml", "zabbix_agent_install.yaml"] },
+    { name: "zabbix_server",   ip: "192.168.56.60", ram: 1024, cpus: 1, playbooks: ["zabbix_server_install.yaml", "zabbix_agent_install.yaml"] },
+    { name: "zabbix_frontend", ip: "192.168.56.40", ram:  512, cpus: 1, playbooks: ["zabbix_frontend_install.yaml", "zabbix_agent_install.yaml"] },
+    { name: "zabbix_proxy",    ip: "192.168.56.50", ram:  512, cpus: 1, playbooks: ["zabbix_proxy_install.yaml", "zabbix_agent_install.yaml"] },
+    { name: "grafana",         ip: "192.168.56.70", ram: 1024, cpus: 1, playbooks: ["grafana_install.yaml", "zabbix_agent_install.yaml"] }
   ]
 
   hosts_entries = nodes.map { |n| "echo '#{n[:ip]} #{n[:name].gsub('_','-')}' >> /etc/hosts" }.join("\n")
 
   nodes.each do |node|
     config.vm.define node[:name] do |n|
-      n.vm.box = "generic/ubuntu2204"
+      n.vm.box = "ubuntu/jammy64"
       n.vm.hostname = node[:name].gsub('_','-')
 
       n.vm.network "private_network",
-        ip: node[:ip],
-        libvirt__network_name: "vagrant-libvirt",
-        libvirt__netmask: "255.255.255.0",
-        libvirt__host_ip: "192.168.121.1",
-        libvirt__dhcp_enabled: true,
-        libvirt__forward_mode: "nat"
+        ip: node[:ip]
 
-      n.vm.provider :libvirt do |vb|
+      n.vm.provider :virtualbox do |vb|
         vb.memory = node[:ram]
         vb.cpus = node[:cpus]
-        vb.machine_type = "pc"
       end
 
       n.vm.provision "shell", inline: hosts_entries

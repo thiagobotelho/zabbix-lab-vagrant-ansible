@@ -33,7 +33,7 @@
   lineinfile:
     path: /etc/postgresql/16/main/pg_hba.conf
     insertafter: EOF
-    line: "host    all    {{ zabbix_monitor_user }}    127.0.0.1/32    md5"
+    line: "host    all    {{ zabbix_monitor_user }}    0.0.0.0/0    md5"
     state: present
 
 - name: Carregar schema do Zabbix com usuário zabbix (server.sql.gz)
