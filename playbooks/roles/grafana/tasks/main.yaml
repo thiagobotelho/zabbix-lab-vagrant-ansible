@@ -63,7 +63,7 @@
       {
         "name": "Zabbix",
         "type": "alexanderzobnin-zabbix-datasource",
-        "url": "http://{{ zabbix_server_ip }}/zabbix",
+        "url": "http://{{ zabbix_frontend_ip }}/zabbix/api_jsonrpc.php",
         "access": "proxy",
         "basicAuth": false,
         "jsonData": {

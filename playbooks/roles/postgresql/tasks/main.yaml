@@ -49,7 +49,7 @@
     regexp: '^#?{{ item.param }}\s*='
     line: "{{ item.param }} = {{ item.value }}"
   with_items:
-    - { param: 'max_connections', value: '300' }
+    - { param: 'max_connections', value: '100' }
     - { param: 'shared_buffers', value: '512MB' }
     - { param: 'work_mem', value: '8MB' }
     - { param: 'maintenance_work_mem', value: '128MB' }
