@@ -37,13 +37,14 @@
     group: zabbix
     mode: '0755'
 
-- name: Configurar Server no zabbix_proxy.conf
+- name: Configurar DBName no zabbix_proxy.conf
   lineinfile:
     path: /etc/zabbix/zabbix_proxy.conf
-    regexp: '^#?\s*Server='
-    line: "Server={{ zabbix_server_ip }}"
+    regexp: '^#?\s*DBName='
+    line: 'DBName=/var/lib/zabbix/zabbix_proxy.db'
     create: yes
     backup: yes
+  register: config_dbname
 
 - name: Configurar Hostname no zabbix_proxy.conf
   lineinfile:
@@ -52,18 +53,26 @@
     line: "Hostname={{ inventory_hostname }}"
     create: yes
     backup: yes
+  register: config_hostname
 
-- name: Configurar DBName para SQLite3 no zabbix_proxy.conf
+- name: Configurar Server no zabbix_proxy.conf
   lineinfile:
     path: /etc/zabbix/zabbix_proxy.conf
-    regexp: '^#?\s*DBName='
-    line: 'DBName=/var/lib/zabbix/zabbix_proxy.db'
+    regexp: '^#?\s*Server='
+    line: "Server={{ zabbix_server_ip }}"
     create: yes
     backup: yes
-  notify: Restart Zabbix Proxy
+  register: config_server
 
-- name: Habilitar e iniciar o serviço do Zabbix Proxy
+- name: Criar banco SQLite se não existir
+  command: sudo -u zabbix /usr/sbin/zabbix_proxy -c /etc/zabbix/zabbix_proxy.conf -R config_cache_reload
+  args:
+    creates: /var/lib/zabbix/zabbix_proxy.db
+
+
+- name: Habilitar e reiniciar Zabbix Proxy se necessário
   service:
     name: zabbix-proxy
-    state: started
+    state: restarted
     enabled: yes
+  when: config_dbname.changed or config_hostname.changed or config_server.changed or db_creation.changed

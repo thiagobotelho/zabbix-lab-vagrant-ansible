@@ -60,3 +60,9 @@
     name: zabbix-server
     state: started
     enabled: yes
+
+- name: Habilitar e iniciar o serviço do Zabbix Agent
+  service:
+    name: zabbix-agent
+    state: started
+    enabled: yes
