@@ -1,6 +1,7 @@
 # 📡 Zabbix + Grafana Monitoring Stack (Automatizado com Vagrant + Ansible)
 
-Este repositório entrega um laboratório 100% automatizado para provisionamento de uma stack de monitoramento baseada em **Zabbix** e **Grafana**, utilizando **PostgreSQL com TimescaleDB** como backend e infraestrutura criada com **Vagrant + VirtualBox**.
+Laboratório reproduzível com **Zabbix 7.0 LTS**, Agent 2, Grafana,
+**PostgreSQL 16 + TimescaleDB**, Ubuntu 24.04 LTS e **libvirt/KVM**.
 
 > Ideal para testes de integração, treinamentos internos, estudos de automação, simulação de ambientes produtivos e POCs corporativas.
 
@@ -16,7 +17,7 @@ Este ambiente simula um stack de monitoramento completo com os seguintes compone
 - **PostgreSQL + TimescaleDB**
 - **Grafana**
 - **Ansible**
-- **Vagrant + VirtualBox**
+- **Vagrant + libvirt/KVM**
 
 ---
 
@@ -26,7 +27,7 @@ Este ambiente simula um stack de monitoramento completo com os seguintes compone
 |------------------|---------------------------------------------------|
 | **Ansible**      | Automação da configuração                         |
 | **Vagrant**      | Provisionamento e gerenciamento das VMs           |
-| **VirtualBox**   | Hypervisor local                                  |
+| **libvirt/KVM** | Hypervisor local                                  |
 | **Zabbix**       | Ferramenta de monitoramento open-source robusta   |
 | **PostgreSQL**   | Banco de dados relacional                         |
 | **Grafana**      | Visualização de métricas                          |
@@ -39,7 +40,7 @@ Este ambiente simula um stack de monitoramento completo com os seguintes compone
 .
 ├── Vagrantfile
 ├── inventory.ini
-├── secret.yml
+├── secret.example.yml
 ├── README.md
 ├── .gitignore
 ├── playbooks/
@@ -74,6 +75,8 @@ Este ambiente simula um stack de monitoramento completo com os seguintes compone
 ### 2. Provisionamento
 
 ```bash
+cp secret.example.yml secret.yml
+# Edite secret.yml e, preferencialmente, proteja-o com Ansible Vault.
 vagrant up
 ```
 
@@ -83,9 +86,15 @@ vagrant up
 
 | Componente         | URL/IP                    | Usuário / Senha         |
 |--------------------|---------------------------|--------------------------|
-| **Zabbix Frontend**| http://192.168.56.40/zabbix| `Admin` / `zabbix`      |
-| **Grafana**        | http://192.168.56.70:3000 | `admin` / `admin`       |
-| **PostgreSQL**     | 192.168.56.30:5432        | `zabbix` / `zabbix123`  |
+| **Zabbix Frontend**| http://192.168.56.40/zabbix | definido em `secret.yml` |
+| **Grafana**        | http://192.168.56.70:3000 | definido em `secret.yml` |
+| **PostgreSQL**     | 192.168.56.30:5432 | definido em `secret.yml` |
+
+Nunca faça commit de `secret.yml`. Para criptografá-lo:
+
+```bash
+ansible-vault encrypt secret.yml
+```
 
 ---
 

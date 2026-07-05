@@ -9,7 +9,7 @@
   block:
     - name: Baixar pacote do repositório Zabbix
       get_url:
-        url: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu22.04_all.deb
+        url: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu24.04_all.deb
         dest: /tmp/zabbix-release.deb
         mode: '0644'
 
@@ -68,7 +68,7 @@
       $ZBX_SERVER_NAME                = 'Zabbix - LAB';
       $ZBX_SERVER                     = '{{ zabbix_server_ip }}';
       $ZBX_SERVER_PORT                = '10051';
-      
+
       $IMAGE_FORMAT_DEFAULT           = IMAGE_FORMAT_PNG;
   notify: Restart Apache
 

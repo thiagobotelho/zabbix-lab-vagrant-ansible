@@ -9,7 +9,7 @@
   block:
     - name: Baixar pacote do repositório Zabbix
       get_url:
-        url: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu22.04_all.deb
+        url: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu24.04_all.deb
         dest: /tmp/zabbix-release.deb
         mode: '0644'
 
@@ -25,7 +25,7 @@
 
 - name: Instalar Zabbix Server com suporte a PostgreSQL e Agent
   apt:
-    name: 
+    name:
       - zabbix-server-pgsql
       - zabbix-agent
     state: present

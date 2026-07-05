@@ -114,7 +114,7 @@
         "overwrite": true,
         "inputs": [
           {
-            "name": "DS_ZABBIX_5.4",
+            "name": "DS_ZABBIX_7.0",
             "type": "datasource",
             "pluginId": "alexanderzobnin-zabbix-datasource",
             "value": "Zabbix"
@@ -150,5 +150,4 @@
           "sslmode": "disable"
         }
       }
-
 

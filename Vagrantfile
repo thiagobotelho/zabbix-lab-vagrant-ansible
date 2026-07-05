@@ -11,15 +11,16 @@ Vagrant.configure("2") do |config|
 
   nodes.each do |node|
     config.vm.define node[:name] do |n|
-      n.vm.box = "ubuntu/jammy64"
+      # Ubuntu 24.04 LTS com provider libvirt, alinhado ao inventário.
+      n.vm.box = "generic/ubuntu2404"
       n.vm.hostname = node[:name].gsub('_','-')
 
       n.vm.network "private_network",
         ip: node[:ip]
 
-      n.vm.provider :virtualbox do |vb|
-        vb.memory = node[:ram]
-        vb.cpus = node[:cpus]
+      n.vm.provider :libvirt do |libvirt|
+        libvirt.memory = node[:ram]
+        libvirt.cpus = node[:cpus]
       end
 
       n.vm.provision "shell", inline: hosts_entries
