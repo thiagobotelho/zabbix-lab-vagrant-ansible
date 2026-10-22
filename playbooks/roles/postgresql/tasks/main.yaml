@@ -5,13 +5,9 @@
       - wget
       - gnupg
       - lsb-release
-      - python3-pip
+      - python3-psycopg2
     state: present
     update_cache: yes
-
-- name: Instalar psycopg2
-  pip:
-    name: psycopg2-binary
 
 - name: Adicionar chave do PostgreSQL
   apt_key:
