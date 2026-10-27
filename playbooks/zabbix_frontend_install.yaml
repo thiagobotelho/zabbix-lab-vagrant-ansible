@@ -3,6 +3,6 @@
   hosts: zabbix_frontend
   become: yes
   vars_files:
-    - "../secret.yml"
+    - "{{ secret_file | default('../secret.yml') }}"
   roles:
     - role: zabbix_frontend

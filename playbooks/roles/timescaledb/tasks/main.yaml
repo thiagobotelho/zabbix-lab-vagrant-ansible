@@ -19,9 +19,6 @@
     state: present
     update_cache: yes
 
-- name: Executar tuning do TimescaleDB
-  ansible.builtin.command: timescaledb-tune --quiet --yes
-
 - name: Configurar preload da extensão TimescaleDB
   lineinfile:
     path: /etc/postgresql/16/main/postgresql.conf

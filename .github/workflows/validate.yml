@@ -15,4 +15,5 @@ jobs:
       - run: ruby -c Vagrantfile
       - run: pipx run yamllint==1.37.1 -d relaxed playbooks secret.example.yml
       - run: cp secret.example.yml secret.yml
-      - run: pipx run --spec ansible-core ansible-playbook --syntax-check -i inventory.ini playbooks/zabbix_db_setup.yaml
+      - run: pipx run --spec ansible-core==2.19.3 ansible-galaxy collection install -r requirements.yml
+      - run: pipx run --spec ansible-core==2.19.3 ansible-playbook --syntax-check -i inventory.ini playbooks/zabbix_db_setup.yaml
