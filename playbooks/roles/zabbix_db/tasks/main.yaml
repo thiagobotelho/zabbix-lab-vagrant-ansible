@@ -15,8 +15,8 @@
     name: "{{ zabbix_db_name }}"
     owner: "{{ zabbix_db_user }}"
     encoding: UTF8
-    lc_collate: en_US.UTF-8
-    lc_ctype: en_US.UTF-8
+    lc_collate: "{{ zabbix_db_collation | default('en_US.UTF-8') }}"
+    lc_ctype: "{{ zabbix_db_ctype | default('en_US.UTF-8') }}"
     template: template0
     state: present
 

@@ -17,3 +17,32 @@ jobs:
       - run: cp secret.example.yml secret.yml
       - run: pipx run --spec ansible-core==2.19.3 ansible-galaxy collection install -r requirements.yml
       - run: pipx run --spec ansible-core==2.19.3 ansible-playbook --syntax-check -i inventory.ini playbooks/zabbix_db_setup.yaml
+
+  integrar-banco:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: timescale/timescaledb@sha256:322ae364eca3321cf2a48f1ef31213b87843413b3cf8feeebf54e999a26bb731
+        env:
+          POSTGRES_PASSWORD: somente-ci-descartavel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Preparar dependências e arquivos sintéticos
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-psycopg2 postgresql-client acl
+          id postgres >/dev/null 2>&1 || sudo useradd --system --create-home postgres
+          sudo install -d /usr/share/zabbix-sql-scripts/postgresql/timescaledb
+          gzip -c tests/fixtures/schema.sql | sudo tee /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz >/dev/null
+          sudo install -m 0644 tests/fixtures/timescale.sql /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql
+      - run: pipx run --spec ansible-core==2.19.3 ansible-galaxy collection install -r requirements.yml
+      - name: Testar duas execuções e banco parcial
+        env:
+          ANSIBLE_ROLES_PATH: ./playbooks/roles
+        run: pipx run --spec ansible-core==2.19.3 ansible-playbook -i localhost, tests/integracao-banco.yaml
