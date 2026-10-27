@@ -108,3 +108,19 @@ ansible-vault encrypt secret.yml
 
 - [Estatísticas PostgreSQL (16981)](https://grafana.com/grafana/dashboards/16981/)
 - [Zabbix Server (5363)](https://grafana.com/grafana/dashboards/5363/)
+
+## Provisionamento seguro do banco
+
+Antes de vagrant up, instale a coleção fixada com ansible-galaxy collection install -r requirements.yml. O host do banco precisa de psycopg2, instalado pela role PostgreSQL. Usuários e banco são gerenciados por módulos PostgreSQL; senhas são parâmetros protegidos por no_log.
+
+O schema base só é importado se public.dbversion não existe e o banco não contém tabelas. Banco parcialmente inicializado bloqueia a instalação. A extensão TimescaleDB precede a conversão, que é protegida pela existência da hypertable history. Antes de upgrades, faça backup e siga o processo oficial de atualização do Zabbix; este playbook não reimporta o schema para atualizar versões.
+
+Para testar, use banco descartável e senha sintética contendo apóstrofo. Execute o playbook duas vezes: a segunda deve preservar dados e pular importações. Verifique acesso dos hosts do inventário e bloqueio de uma origem não autorizada. Migre regras antigas de monitoramento 0.0.0.0/0 antes de usar fora de um ambiente isolado.
+
+## Aprender a configuração
+
+Consulte o [guia comentado](docs/APRENDIZADO.md) para entender componentes, escolhas, testes positivos/negativos e reversão.
+
+## Fixar a versão da box
+
+Selecione no catálogo oficial da box uma versão existente com provider libvirt e defina VAGRANT_BOX_VERSION antes de vagrant validate/up. O provisionamento bloqueia sem essa escolha, evitando resolver silenciosamente uma versão móvel. O nome da box e a versão devem existir no catálogo; ruby -c valida apenas a sintaxe e não comprova disponibilidade do download. Para atualizar, revise a versão e teste em uma VM descartável.

@@ -1,0 +1,98 @@
+---
+- name: Validar inicialização e reexecução em PostgreSQL descartável
+  hosts: localhost
+  connection: local
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    zabbix_db_user: zabbix_sintetico
+    zabbix_db_password: "sintetica'com-apostrofo"
+    zabbix_monitor_user: monitor_sintetico
+    zabbix_monitor_password: somente-ci-descartavel
+    zabbix_db_name: zabbix_fixture
+    zabbix_db_collation: C
+    zabbix_db_ctype: C
+  module_defaults:
+    community.postgresql.postgresql_user: &connection
+      login_host: 127.0.0.1
+      login_port: 5432
+      login_user: postgres
+      login_password: somente-ci-descartavel
+    community.postgresql.postgresql_db: *connection
+    community.postgresql.postgresql_membership: *connection
+    community.postgresql.postgresql_query: *connection
+    community.postgresql.postgresql_ext: *connection
+    community.postgresql.postgresql_script: *connection
+  tasks:
+    - name: Executar inicialização com senha sintética contendo apóstrofo
+      ansible.builtin.include_role:
+        name: zabbix_db
+
+    - name: Registrar dado que deve sobreviver à reexecução
+      community.postgresql.postgresql_query:
+        login_db: zabbix_fixture
+        query: INSERT INTO public.payload VALUES (1)
+
+    - name: Executar novamente sem importar ou converter o schema outra vez
+      ansible.builtin.include_role:
+        name: zabbix_db
+
+    - name: Conferir preservação do dado e versão do schema
+      community.postgresql.postgresql_query:
+        login_db: zabbix_fixture
+        query: >-
+          SELECT (SELECT count(*) FROM public.payload) AS payload,
+          (SELECT count(*) FROM public.dbversion) AS versions
+      register: preserved
+      changed_when: false
+
+    - name: Exigir preservação dos dados
+      ansible.builtin.assert:
+        that:
+          - preserved.query_result[0].payload == 1
+          - preserved.query_result[0].versions == 1
+
+    - name: Criar banco parcialmente inicializado
+      community.postgresql.postgresql_db:
+        name: partial_fixture
+        encoding: UTF8
+        lc_collate: C
+        lc_ctype: C
+        template: template0
+        owner: zabbix_sintetico
+        state: present
+
+    - name: Criar tabela sem marcador de versão
+      community.postgresql.postgresql_query:
+        login_db: partial_fixture
+        query: CREATE TABLE public.preexistente (id INTEGER)
+
+    - name: Selecionar banco parcial para o teste negativo
+      ansible.builtin.set_fact:
+        zabbix_db_name: partial_fixture
+
+    - name: Exigir bloqueio antes de importar sobre tabelas preexistentes
+      block:
+        - name: Tentar inicializar banco parcial
+          ansible.builtin.include_role:
+            name: zabbix_db
+        - name: Rejeitar sucesso inesperado
+          ansible.builtin.fail:
+            msg: O banco parcial deveria ter sido bloqueado
+      rescue:
+        - name: Confirmar a causa específica do bloqueio
+          ansible.builtin.assert:
+            that:
+              - "'Banco contém tabelas sem dbversion' in ansible_failed_result.msg"
+
+    - name: Confirmar que o bloqueio não importou o schema
+      community.postgresql.postgresql_query:
+        login_db: partial_fixture
+        query: SELECT to_regclass('public.dbversion') IS NULL AS untouched
+      register: blocked
+      changed_when: false
+
+    - name: Exigir banco parcial preservado
+      ansible.builtin.assert:
+        that:
+          - blocked.query_result[0].untouched

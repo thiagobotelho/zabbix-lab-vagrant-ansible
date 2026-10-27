@@ -13,6 +13,8 @@ Vagrant.configure("2") do |config|
     config.vm.define node[:name] do |n|
       # Ubuntu 24.04 LTS com provider libvirt, alinhado ao inventário.
       n.vm.box = "generic/ubuntu2404"
+      # Escolher a versão no catálogo antes de provisionar; não seguir releases móveis.
+      n.vm.box_version = ENV.fetch("VAGRANT_BOX_VERSION") { abort "Defina VAGRANT_BOX_VERSION com uma versão libvirt existente da box escolhida" }
       n.vm.hostname = node[:name].gsub('_','-')
 
       n.vm.network "private_network",
@@ -31,7 +33,7 @@ Vagrant.configure("2") do |config|
             ansible.playbook = "playbooks/#{playbook}"
             ansible.inventory_path = "inventory.ini"
             ansible.verbose = "v"
-            ansible.extra_vars = { "secret_file" => "secret.yml" }
+            ansible.extra_vars = { "secret_file" => File.expand_path("secret.yml", __dir__) }
           end
         end
       end

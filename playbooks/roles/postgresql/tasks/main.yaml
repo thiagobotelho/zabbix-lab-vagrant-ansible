@@ -25,12 +25,42 @@
     state: present
     update_cache: yes
 
-- name: Permitir acesso ao banco Zabbix via md5
-  lineinfile:
+# Remover a regra ampla de versões anteriores antes de adicionar origens exatas.
+- name: Remover regra legada de acesso amplo ao PostgreSQL
+  ansible.builtin.lineinfile:
     path: /etc/postgresql/16/main/pg_hba.conf
-    insertafter: EOF
-    line: "host    {{ zabbix_db_name }}    {{ zabbix_db_user }}    0.0.0.0/0    md5"
-    state: present
+    regexp: '^host\s+{{ zabbix_db_name | regex_escape }}\s+{{ zabbix_db_user | regex_escape }}\s+0\.0\.0\.0/0\s+md5$'
+    state: absent
+  notify: Restart PostgreSQL
+
+- name: Remover regra legada ampla do usuário de monitoramento
+  ansible.builtin.lineinfile:
+    path: /etc/postgresql/16/main/pg_hba.conf
+    regexp: '^host\s+all\s+{{ zabbix_monitor_user | regex_escape }}\s+0\.0\.0\.0/0\s+md5$'
+    state: absent
+  notify: Restart PostgreSQL
+
+- name: Permitir somente hosts do inventário no banco Zabbix
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/16/main/pg_hba.conf
+    contype: host
+    databases: "{{ zabbix_db_name }}"
+    users: "{{ zabbix_db_user }}"
+    source: "{{ hostvars[item].ansible_host }}/32"
+    method: scram-sha-256
+  loop: "{{ groups['zabbix_server'] + groups['zabbix_frontend'] }}"
+  notify: Restart PostgreSQL
+
+- name: Restringir conexão do usuário de monitoramento ao servidor Zabbix
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/16/main/pg_hba.conf
+    contype: host
+    databases: all
+    users: "{{ zabbix_monitor_user }}"
+    source: "{{ hostvars[item].ansible_host }}/32"
+    method: scram-sha-256
+  loop: "{{ groups['zabbix_server'] }}"
+  notify: Restart PostgreSQL
 
 - name: Configurar postgresql.conf para aceitar conexões externas
   lineinfile:
